@@ -22,7 +22,7 @@ class TotalIuran extends Component {
   }
 
   getChartData(){
-    axios.get('http://10.16.146.199:8000/api/iuran/')
+    axios.get('http://pekanbarukota.zapto.org:8000/api/iuran/')
       .then(res => {
         const allIurans = res.data
         const iuran = allIurans.map(allIuran => allIuran.jml_bayar)

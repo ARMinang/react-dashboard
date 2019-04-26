@@ -22,7 +22,7 @@ class TenagaKerja extends Component {
   }
 
   getChartData(){
-    axios.get('http://10.16.146.199:8000/api/tk/')
+    axios.get('http://pekanbarukota.zapto.org:8000/api/tk/')
       .then(res => {
         const allTks = res.data
         const jumlah = allTks.map(allTk => allTk.jml_tk)
