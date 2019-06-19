@@ -13,7 +13,7 @@ class TotalIuran extends Component {
       chartOptions: {},
       iuran: 0,
       lastMonth: '',
-      lastIuran: 0
+      lastNpp: 0
     }
   }
 
@@ -22,21 +22,23 @@ class TotalIuran extends Component {
   }
 
   getChartData(){
-    axios.get('http://127.0.0.1:8000/api/iuran/')
+    axios.get('http://127.0.0.1:8000/api/npp/')
       .then(res => {
-        const allIurans = res.data
-        const iuran = allIurans.map(allIuran => allIuran.jml_bayar)
-        const bulan = allIurans.map(allIuran => moment(allIuran.month).locale('id', localization).format('MMMM'))
+        const allNpp = res.data
+        const allPenambahan = allNpp['penambahan_npp']
+        const npp = allPenambahan.map(penambahan => penambahan.jml_npp)
+        const bulan = allPenambahan.map(penambahan => moment(penambahan.month).locale('id', localization).format('MMMM'))
         const add = (a, b) => a + b
-        const total_iuran = iuran.reduce(add)
+        const total_penambahan = npp.reduce(add)
         const lastMonth = bulan[bulan.length - 1]
-        const lastIuran = iuran[iuran.length - 1]
+        const lastNpp = npp[npp.length - 1]
+        console.log(lastNpp)
         this.setState({
           chartData: {
             labels: bulan,
             datasets: [
               {
-                label: 'Penerimaan Iuran',
+                label: 'Penambahan NPP',
                 borderColor: 'rgba(255,99,132,1)',
                 backgroundColor: [
 	                'rgba(255, 99, 132, 0.4)',
@@ -47,7 +49,7 @@ class TotalIuran extends Component {
 	                'rgba(255, 159, 64, 0.4)'
            		  ],
                 borderWidth: 1,
-                data: iuran
+                data: npp
               }
             ]
           },
@@ -64,9 +66,9 @@ class TotalIuran extends Component {
               }]
             }
           },
-          iuran: total_iuran.toLocaleString('id'),
+          penambahan: total_penambahan.toLocaleString('id'),
           lastMonth,
-          lastIuran
+          lastNpp
         })
       })
 
@@ -80,14 +82,14 @@ class TotalIuran extends Component {
             <Card.Group>
               <Card raised>
                 <Card.Content>
-                  <Card.Header>Total Iuran</Card.Header>
-                  <Card.Description style={{fontSize: '2em'}}>{this.state.iuran}</Card.Description>
+                  <Card.Header>Total Akuisisi NPP</Card.Header>
+                  <Card.Description style={{fontSize: '2em'}}>{this.state.penambahan}</Card.Description>
                 </Card.Content>
               </Card>
               <Card raised>
                 <Card.Content>
-                  <Card.Header>Iuran {this.state.lastMonth}</Card.Header>
-                  <Card.Description style={{fontSize: '2em'}}>{this.state.lastIuran.toLocaleString('id')}</Card.Description>
+                  <Card.Header>Akuisisi NPP {this.state.lastMonth}</Card.Header>
+                  <Card.Description style={{fontSize: '2em'}}>{this.state.lastNpp.toLocaleString('id')}</Card.Description>
               </Card.Content>
               </Card>
             </Card.Group>
