@@ -1,77 +1,17 @@
 import React, { Component } from 'react'
 import { Bar } from 'react-chartjs-2'
 import { Container, Grid, Card } from 'semantic-ui-react'
-import axios from 'axios'
-import moment from 'moment'
-import localization from 'moment/locale/id'
 
 class TotalIuran extends Component {
-  constructor() {
-    super()
-    this.state = {
-      chartData: {},
-      chartOptions: {},
-      iuran: 0,
-      lastMonth: '',
-      lastNpp: 0
-    }
+  constructor(props) {
+    super(props)
+    this.state = {}
+    this.reference = {}
   }
 
-  componentWillMount(){
-    this.getChartData()
-  }
-
-  getChartData(){
-    axios.get('http://127.0.0.1:8000/api/npp/')
-      .then(res => {
-        const allNpp = res.data
-        const allPenambahan = allNpp['penambahan_npp']
-        const npp = allPenambahan.map(penambahan => penambahan.jml_npp)
-        const bulan = allPenambahan.map(penambahan => moment(penambahan.month).locale('id', localization).format('MMMM'))
-        const add = (a, b) => a + b
-        const total_penambahan = npp.reduce(add)
-        const lastMonth = bulan[bulan.length - 1]
-        const lastNpp = npp[npp.length - 1]
-        console.log(lastNpp)
-        this.setState({
-          chartData: {
-            labels: bulan,
-            datasets: [
-              {
-                label: 'Penambahan NPP',
-                borderColor: 'rgba(255,99,132,1)',
-                backgroundColor: [
-	                'rgba(255, 99, 132, 0.4)',
-	                'rgba(54, 162, 235, 0.4)',
-	                'rgba(255, 206, 86, 0.4)',
-	                'rgba(75, 192, 192, 0.4)',
-	                'rgba(153, 102, 255, 0.4)',
-	                'rgba(255, 159, 64, 0.4)'
-           		  ],
-                borderWidth: 1,
-                data: npp
-              }
-            ]
-          },
-          chartOptions: {
-            maintainAspectRatio: false,
-            scales: {
-              yAxes: [{
-                ticks: {
-                  beginAtZero:true,
-                  callback: function(value, index, values) {
-                    return value.toLocaleString('en');
-                  },
-                }
-              }]
-            }
-          },
-          penambahan: total_penambahan.toLocaleString('id'),
-          lastMonth,
-          lastNpp
-        })
-      })
-
+  componentWillReceiveProps() {
+    let barChart = this.reference.chartInstance
+    barChart.update()
   }
 
   render() {
@@ -83,13 +23,13 @@ class TotalIuran extends Component {
               <Card raised>
                 <Card.Content>
                   <Card.Header>Total Akuisisi NPP</Card.Header>
-                  <Card.Description style={{fontSize: '2em'}}>{this.state.penambahan}</Card.Description>
+                  <Card.Description style={{fontSize: '2em'}}>{this.props.totalPenambahan ? this.props.totalPenambahan.toLocaleString('id'): 0}</Card.Description>
                 </Card.Content>
               </Card>
               <Card raised>
                 <Card.Content>
                   <Card.Header>Akuisisi NPP {this.state.lastMonth}</Card.Header>
-                  <Card.Description style={{fontSize: '2em'}}>{this.state.lastNpp.toLocaleString('id')}</Card.Description>
+                  <Card.Description style={{fontSize: '2em'}}>{this.props.lastNpp ? this.props.lastNpp.toLocaleString('id'): 0}</Card.Description>
               </Card.Content>
               </Card>
             </Card.Group>
@@ -98,10 +38,11 @@ class TotalIuran extends Component {
             <Grid.Column>
               <div>
                 <Bar
-                  data={this.state.chartData}
+                  data={this.props.chartData}
                   width={100}
                   height={50}
-                  options={this.state.chartOptions}/>
+                  options={this.props.chartOptions}
+                  ref = {(reference) => this.reference = reference}/>
               </div>
             </Grid.Column>
           </Grid.Row>
