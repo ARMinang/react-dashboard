@@ -28,7 +28,7 @@ class TotalIuran extends Component {
               </Card>
               <Card raised>
                 <Card.Content>
-                  <Card.Header>Akuisisi NPP {this.state.lastMonth}</Card.Header>
+                  <Card.Header>Akuisisi NPP {this.props.lastMonth}</Card.Header>
                   <Card.Description style={{fontSize: '2em'}}>{this.props.lastNpp ? this.props.lastNpp.toLocaleString('id'): 0}</Card.Description>
               </Card.Content>
               </Card>
