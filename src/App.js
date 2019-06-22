@@ -120,6 +120,7 @@ class App extends Component {
       speed: 500,
       autoplay: true,
       autoplaySpeed: 3000,
+      pauseOnHover: false,
       beforeChange: (currentIndex, nextIndex) => {
         switch(nextIndex) {
           case 0:
