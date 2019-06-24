@@ -6,6 +6,7 @@ import 'slick-carousel/slick/slick-theme.css'
 import TotalIuran from './Components/Iuran'
 import TenagaKerja from './Components/TenagaKerja'
 import Npp from './Components/Npp'
+import IuranAr from './Components/IuranAr'
 import {
   Header,
   Container,
@@ -16,14 +17,32 @@ import {
 import axios from 'axios'
 import moment from 'moment'
 import localization from 'moment/locale/id'
-import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { bold } from 'ansi-colors';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 const getWidth = () => {
   const isSSR = typeof window === 'undefined'
 
   return isSSR ? Responsive.onlyTablet.minWidth : window.innerWidth
 }
+
+const AR = [
+  'AK153580', 'ED160810', 'FA165960', 'RA248900', 'SU244930'
+]
+
+const COLOR = [
+  'rgba(255, 99, 132, 0.4)',
+  'rgba(54, 162, 235, 0.4)',
+  'rgba(255, 206, 86, 0.4)',
+  'rgba(75, 192, 192, 0.4)',
+  'rgba(153, 102, 255, 0.4)',
+  'rgba(255, 159, 64, 0.4)'
+]
+
+const ARK = [
+  'FE174690', 'GR153600', 'MU165970', 'NI273920', 'RA174700',
+  'RO259060', 'SE251740'
+]
 
 const createChartData = (labels, label, data) => {
   return {
@@ -44,6 +63,33 @@ const createChartData = (labels, label, data) => {
           data: data
         }
       ]
+  }
+}
+
+const createStackedData = (labels, data) => {
+  return {
+    labels: labels,
+    datasets: data
+  }
+}
+
+const stackedChartOptions = {
+  barValueSpacing: 20,
+  maintainAspectRatio: false,
+  scales: {
+    yAxes: [{
+      ticks: {
+        beginAtZero:true,
+        callback: function(value, index, values) {
+          return value.toLocaleString('en');
+        },
+      }
+    }]
+  },
+  plugins: {
+    datalabels: {
+      display: false
+    }
   }
 }
 
@@ -85,7 +131,12 @@ class App extends Component {
       title: "Penerimaan Iuran",
       iuranData: {chartData: {}},
       tkData: {chartData: {}},
-      nppData: { chartData: {}}
+      nppData: { chartData: {}},
+      iuranAr: { chartData: {} },
+      iuranArk: {chartData: {}},
+      tkAr: {chartData: {}},
+      tkArk: {chartData: {}},
+      nppArk: {chartData: {}}
     }
   }
 
@@ -109,7 +160,65 @@ class App extends Component {
       const lastMonth = bulan[bulan.length - 1]
       const lastIuran = iuran[iuran.length - 1]
       const chartData = createChartData(bulan, "Penerimaan Iuran", iuran)
-      this.setState({iuranData: {total_iuran, lastMonth, lastIuran, chartData, chartOptions}})
+      this.setState({iuranData: {total_iuran, lastMonth, lastIuran, chartData, chartOptions,}})
+    })
+  }
+
+  generateIuranPerAr = (ARX, url) => {
+    axios.get(url)
+    .then(res => {
+      const allIurans = res.data
+      let datasets = []
+      let first = true
+      let bulan = []
+      let node
+      switch (url) {
+        case 'http://127.0.0.1:8000/api/iuran/ar/':
+          node = 'jml_bayar'
+          break
+        case 'http://127.0.0.1:8000/api/tk/ar/':
+          node = 'jml_tk'
+          break
+        case 'http://127.0.0.1:8000/api/npp/ar/':
+          node = 'jml_npp'
+          break
+        default:
+          break
+      }
+      ARX.forEach((singleAr, index) => {
+        let dataAr = []
+        allIurans.forEach(iuran => {
+          if (singleAr === iuran['kode_pembina']) {
+            dataAr.push(iuran[node])
+            if (first) {
+              bulan.push(moment(iuran.month).locale('id', localization).format('MMMM'))
+            }
+          }
+        })
+        datasets.push({label: singleAr, backgroundColor: COLOR[index], data: dataAr})
+        if (first) {
+          first = false
+        }
+      })
+      console.log(datasets)
+      const chartData = createStackedData(bulan, datasets)
+      switch (url) {
+        case 'http://127.0.0.1:8000/api/iuran/ar/':
+          ARX.length > 5
+            ? this.setState({iuranArk: {chartData, stackedChartOptions}})
+            : this.setState({iuranAr: {chartData, stackedChartOptions}})
+          break
+        case 'http://127.0.0.1:8000/api/tk/ar/':
+          ARX.length > 5
+            ? this.setState({tkArk: {chartData, stackedChartOptions}})
+            : this.setState({tkAr: {chartData, stackedChartOptions}})
+          break
+        case 'http://127.0.0.1:8000/api/npp/ar/':
+          this.setState({nppArk: {chartData, stackedChartOptions}})
+          break
+        default:
+          break
+      }
     })
   }
 
@@ -119,7 +228,7 @@ class App extends Component {
       infinite: true,
       speed: 500,
       autoplay: true,
-      autoplaySpeed: 3000,
+      autoplaySpeed: 3 * 1000 * 60,
       pauseOnHover: false,
       beforeChange: (currentIndex, nextIndex) => {
         switch(nextIndex) {
@@ -127,6 +236,14 @@ class App extends Component {
             this.generateIuran()      
             break
           case 1:
+            this.setState({title: "Penerimaan Iuran per AR"})
+            this.generateIuranPerAr(AR, 'http://127.0.0.1:8000/api/iuran/ar/')
+            break
+          case 2:
+            this.setState({title: "Penerimaan Iuran per ARK"})
+            this.generateIuranPerAr(ARK, 'http://127.0.0.1:8000/api/iuran/ar/')
+            break
+          case 3:
             this.setState({ title: "Penambahan TK"})
             axios.get('http://127.0.0.1:8000/api/tk/')
             .then(res => {
@@ -145,7 +262,15 @@ class App extends Component {
               this.setState({tkData: {totalTk, lastMonth, lastTk, chartData, chartOptions}})
             })
             break
-          case 2:
+          case 4:
+            this.setState({title: "Penambahan TK AR"})
+            this.generateIuranPerAr(AR, 'http://127.0.0.1:8000/api/tk/ar/')
+            break
+          case 5:
+            this.setState({title: "Penambahan TK ARK"})
+            this.generateIuranPerAr(ARK, 'http://127.0.0.1:8000/api/tk/ar/')
+            break
+          case 6:
             this.setState({ title: "Akuisisi NPP"})
             axios.get('http://127.0.0.1:8000/api/npp/')
             .then(res => {
@@ -162,9 +287,12 @@ class App extends Component {
               const lastMonth = bulan[bulan.length - 1]
               const lastNpp = npp[npp.length - 1]
               const chartData = createChartData(bulan, "Akuisisi NPP", npp)
-              console.log(chartData)
               this.setState({nppData: {totalPenambahan, lastMonth, lastNpp, chartData, chartOptions}})
             })
+            break
+          case 7:
+            this.setState({title: "Penambahan NPP per ARK"})
+            this.generateIuranPerAr(ARK, 'http://127.0.0.1:8000/api/npp/ar/')
             break
           default:
             this.setState({ title: "Dashboard Pekanbaru Kota"})
@@ -199,10 +327,25 @@ class App extends Component {
               <TotalIuran {...this.state.iuranData}/>
             </div>
             <div>
+              <IuranAr {...this.state.iuranAr}/>
+            </div>
+            <div>
+              <IuranAr {...this.state.iuranArk}/>
+            </div>
+            <div>
               <TenagaKerja {...this.state.tkData}/>
             </div>
             <div>
+              <IuranAr {...this.state.tkAr}/>
+            </div>
+            <div>
+              <IuranAr {...this.state.tkArk}/>
+            </div>
+            <div>
               <Npp {...this.state.nppData} />
+            </div>
+            <div>
+              <IuranAr {...this.state.nppArk}/>
             </div>
           </Slider>
         </div>
