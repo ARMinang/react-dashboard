@@ -20,6 +20,9 @@ import localization from 'moment/locale/id'
 import { bold } from 'ansi-colors';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
+const SERVER = "http://127.0.0.1:8000"
+
+
 const getWidth = () => {
   const isSSR = typeof window === 'undefined'
 
@@ -146,7 +149,7 @@ class App extends Component {
 
   generateIuran = () => {
     this.setState({ title: "Penerimaan Iuran"})
-    axios.get('http://127.0.0.1:8000/api/iuran/')
+    axios.get(`${SERVER}/api/iuran/`)
     .then(res => {
       const allIurans = res.data
       let iuran = []
@@ -173,13 +176,13 @@ class App extends Component {
       let bulan = []
       let node
       switch (url) {
-        case 'http://127.0.0.1:8000/api/iuran/ar/':
+        case `${SERVER}/api/iuran/ar/`:
           node = 'jml_bayar'
           break
-        case 'http://127.0.0.1:8000/api/tk/ar/':
+        case `${SERVER}/api/tk/ar/`:
           node = 'jml_tk'
           break
-        case 'http://127.0.0.1:8000/api/npp/ar/':
+        case `${SERVER}/api/npp/ar/`:
           node = 'jml_npp'
           break
         default:
@@ -203,17 +206,17 @@ class App extends Component {
       console.log(datasets)
       const chartData = createStackedData(bulan, datasets)
       switch (url) {
-        case 'http://127.0.0.1:8000/api/iuran/ar/':
+        case `${SERVER}/api/iuran/ar/`:
           ARX.length > 5
             ? this.setState({iuranArk: {chartData, stackedChartOptions}})
             : this.setState({iuranAr: {chartData, stackedChartOptions}})
           break
-        case 'http://127.0.0.1:8000/api/tk/ar/':
+        case `${SERVER}/api/tk/ar/`:
           ARX.length > 5
             ? this.setState({tkArk: {chartData, stackedChartOptions}})
             : this.setState({tkAr: {chartData, stackedChartOptions}})
           break
-        case 'http://127.0.0.1:8000/api/npp/ar/':
+        case `${SERVER}/api/npp/ar/`:
           this.setState({nppArk: {chartData, stackedChartOptions}})
           break
         default:
@@ -237,15 +240,15 @@ class App extends Component {
             break
           case 1:
             this.setState({title: "Penerimaan Iuran per AR"})
-            this.generateIuranPerAr(AR, 'http://127.0.0.1:8000/api/iuran/ar/')
+            this.generateIuranPerAr(AR, `${SERVER}/api/iuran/ar/`)
             break
           case 2:
             this.setState({title: "Penerimaan Iuran per ARK"})
-            this.generateIuranPerAr(ARK, 'http://127.0.0.1:8000/api/iuran/ar/')
+            this.generateIuranPerAr(ARK, `${SERVER}/api/iuran/ar/`)
             break
           case 3:
             this.setState({ title: "Penambahan TK"})
-            axios.get('http://127.0.0.1:8000/api/tk/')
+            axios.get(`${SERVER}/api/tk/`)
             .then(res => {
               const allTks = res.data
               let jumlah = []
@@ -264,15 +267,15 @@ class App extends Component {
             break
           case 4:
             this.setState({title: "Penambahan TK AR"})
-            this.generateIuranPerAr(AR, 'http://127.0.0.1:8000/api/tk/ar/')
+            this.generateIuranPerAr(AR, `${SERVER}/api/tk/ar/`)
             break
           case 5:
             this.setState({title: "Penambahan TK ARK"})
-            this.generateIuranPerAr(ARK, 'http://127.0.0.1:8000/api/tk/ar/')
+            this.generateIuranPerAr(ARK, `${SERVER}/api/tk/ar/`)
             break
           case 6:
             this.setState({ title: "Akuisisi NPP"})
-            axios.get('http://127.0.0.1:8000/api/npp/')
+            axios.get(`${SERVER}/api/npp/`)
             .then(res => {
               const allNpp = res.data
               const allPenambahan = allNpp['penambahan_npp']
@@ -292,7 +295,7 @@ class App extends Component {
             break
           case 7:
             this.setState({title: "Penambahan NPP per ARK"})
-            this.generateIuranPerAr(ARK, 'http://127.0.0.1:8000/api/npp/ar/')
+            this.generateIuranPerAr(ARK, `${SERVER}/api/npp/ar/`)
             break
           default:
             this.setState({ title: "Dashboard Pekanbaru Kota"})
